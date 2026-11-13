@@ -1,0 +1,40 @@
+/* Ember Room — semantic tokens for adapting your desktop and applications.
+   Source of truth: themes/ember-room.json. Hex alpha uses RRGGBBAA order. */
+:root {
+  color-scheme: dark;
+  --ember-base: #111214;
+  --ember-editor: #181A1E;
+  --ember-surface: #1E2025;
+  --ember-elevated: #25282E;
+  --ember-hover: #2C3037;
+  --ember-selected: #2D333C;
+  --ember-border: #383D46;
+  --ember-divider: #2B2E35;
+  --ember-focus: #D87553;
+  --ember-text: #CDD1D8;
+  --ember-text-bright: #E1E4E9;
+  --ember-text-muted: #A5ABB5;
+  --ember-comment: #9AA1AB;
+  --ember-text-disabled: #686F7B;
+  --ember-orange: #FF8057;
+  --ember-orange-hover: #FFA07D;
+  --ember-keyword: #F28D68;
+  --ember-function: #8FB5C4;
+  --ember-type: #AABEC9;
+  --ember-amber: #D7C294;
+  --ember-peach: #E3B99B;
+  --ember-sage: #A7B89F;
+  --ember-slate: #8FAFBD;
+  --ember-sea-glass: #9ABBB5;
+  --ember-mauve: #B7AAC7;
+  --ember-error: #E28C91;
+  /* Compatibility aliases for the first palette revision. */
+  --ember-copper: var(--ember-orange);
+  --ember-copper-hover: var(--ember-orange-hover);
+  --ember-clay: var(--ember-peach);
+  --ember-success: var(--ember-sage);
+  --ember-warning: var(--ember-amber);
+  --ember-info: var(--ember-slate);
+  --ember-selection: #8FAFBD26;
+  --ember-on-accent: #181A1E;
+}
