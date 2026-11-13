@@ -22,5 +22,5 @@ def find_notes(directory: Path) -> list[Path]:
 
 
 if __name__ == "__main__":
-    room = Workspace(name="Ember Room")
+    room = Workspace(name="Cinderline")
     print(room.describe())

@@ -25,5 +25,5 @@ export function describeRoom({ name, materials }: Room): string {
   return `${label}\nMaterials: ${materials.join(", ")}`;
 }
 
-const room = createRoom("Ember Room");
+const room = createRoom("Cinderline");
 console.log(describeRoom(room));

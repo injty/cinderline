@@ -41,7 +41,7 @@ def contrast(foreground, background):
 
 
 def main():
-    family = json.loads((ROOT / "themes/ember-room.json").read_text(encoding="utf-8"),
+    family = json.loads((ROOT / "themes/cinderline.json").read_text(encoding="utf-8"),
                         object_pairs_hook=unique_object)
     assert len(family["themes"]) == 1
     theme = family["themes"][0]
@@ -62,6 +62,9 @@ def main():
             colors.append(value.upper())
 
     inspect(style)
+    for color in colors:
+        red, _, blue, _ = rgba(color)
+        assert blue <= red, f"Unexpected blue/cyan undertone: {color}"
     css = (ROOT / "palette.css").read_text(encoding="utf-8")
     for color in re.findall(r"#[0-9a-fA-F]{6,8}\b", css):
         assert color.upper() in colors, f"Palette color missing from theme: {color}"

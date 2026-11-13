@@ -6,7 +6,7 @@ from pathlib import Path
 from string import Template
 
 ROOT = Path(__file__).resolve().parents[1]
-STYLE = json.loads((ROOT / "themes/ember-room.json").read_text(encoding="utf-8"))["themes"][0]["style"]
+STYLE = json.loads((ROOT / "themes/cinderline.json").read_text(encoding="utf-8"))["themes"][0]["style"]
 
 
 def token(capture, text):
@@ -51,6 +51,8 @@ variables = {
     "selected": "element.selected", "line": "editor.active_line.background",
     "number": "editor.line_number", "green": "success", "red": "error", "amber": "warning",
     "blue": "info", "search": "search.active_match_background",
+    "editor-text": "editor.foreground", "terminal-text": "terminal.foreground",
+    "vim-normal": "vim.normal.background", "vim-text": "vim.normal.foreground",
 }
 css = "\n".join(f"--{name}: {STYLE[key]};" for name, key in variables.items())
 css += f"\n--selection: {STYLE['players'][0]['selection']};"
@@ -58,9 +60,9 @@ swatches = "".join(
     f'<div class="swatch"><i style="background:{STYLE[key]}"></i>'
     f'<span>{name}</span><code>{STYLE[key]}</code></div>'
     for name, key in [("Charcoal", "background"), ("Graphite", "editor.background"),
-                      ("Silver", "text"), ("Ember", "text.accent"),
-                      ("Sand", "warning"), ("Sage", "success"),
-                      ("Slate", "info"), ("Rose", "error")]
+                      ("Soft white", "text"), ("Ember", "text.accent"),
+                      ("Silver", "warning"), ("Sage", "success"),
+                      ("Normal", "vim.normal.background"), ("Clay", "error")]
 )
 ansi = "".join(
     '<div class="ansi-row">' + "".join(
@@ -75,7 +77,7 @@ page = Template('''<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>Ember Room — color study</title>
+<title>Cinderline — color study</title>
 <style>
 :root { $css }
 * { box-sizing: border-box; }
@@ -105,12 +107,12 @@ aside { padding: 18px 9px; border-right: 1px solid var(--border); color: var(--m
 .tab { padding: 10px 20px; color: var(--muted); border-right: 1px solid var(--border); }
 .tab.current { background: var(--editor); color: var(--text); box-shadow: inset 0 2px var(--accent); }
 .breadcrumbs { color: var(--muted); font-size: 11px; padding: 8px 20px; }
-.source { overflow-x: auto; padding: 7px 0 20px; counter-reset: line; font: 14px/25px "Cascadia Code", Consolas, monospace; color: var(--text); }
+.source { overflow-x: auto; padding: 7px 0 20px; counter-reset: line; font: 14px/25px "Cascadia Code", Consolas, monospace; color: var(--editor-text); }
 .line { min-width: 720px; white-space: pre; padding-right: 24px; }
 .line::before { counter-increment: line; content: counter(line); color: var(--number); display: inline-block; width: 50px; padding-right: 21px; text-align: right; user-select: none; }
 .line.active { background: var(--line); }
 .line.active::before { color: var(--accent); }
-.terminal { border-top: 1px solid var(--border); padding: 12px 20px 17px; }
+.terminal { border-top: 1px solid var(--border); padding: 12px 20px 17px; color: var(--terminal-text); }
 .terminal-heading { display: flex; gap: 25px; font-size: 11px; color: var(--muted); margin-bottom: 11px; }
 .terminal-heading span:first-child { color: var(--text); }
 .prompt { font: 12px/1.8 "Cascadia Code", Consolas, monospace; }
@@ -122,6 +124,7 @@ aside { padding: 18px 9px; border-right: 1px solid var(--border); color: var(--m
 .ansi i { width: 23px; height: 7px; border-radius: 2px; }
 .status { display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding: 5px 14px; color: var(--muted); font-size: 11px; }
 .status .branch { color: var(--amber); }
+.vim-normal { background: var(--vim-normal); color: var(--vim-text); padding: 1px 6px; border-radius: 2px; margin-right: 10px; }
 .details { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
 .card { padding: 18px 20px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
 .card h2 { font-size: 11px; letter-spacing: .12em; font-weight: 400; color: var(--muted); margin: 0 0 12px; }
@@ -145,15 +148,15 @@ footer { margin-top: 26px; color: var(--muted); font-size: 11px; display: flex; 
 </head>
 <body><main>
 <header>
-  <div><div class="eyebrow">GRAPHITE / ORANGE / SLATE</div><h1>Ember Room<span>.</span></h1>
-  <p>Глубокий графит. Дымчатый синий. Оранжевый свет.</p></div>
-  <div class="edition"><strong>A personal dark theme for Zed</strong>Graphite revision · 02</div>
+  <div><div class="eyebrow">ASPHALT / SILVER / ORANGE</div><h1>Cinderline<span>.</span></h1>
+  <p>Тёмный асфальт. Мягкое серебро. Оранжевый свет.</p></div>
+  <div class="edition"><strong>A personal dark theme for Zed</strong>Asphalt &amp; silver</div>
 </header>
 <section class="window" aria-label="Схематичное превью темы Zed">
-  <div class="titlebar"><span><b>◈</b> &nbsp; ember-room</span><span>main &nbsp; / &nbsp; Zed</span><span>− &nbsp; □ &nbsp; ×</span></div>
+  <div class="titlebar"><span><b>◈</b> &nbsp; cinderline</span><span>main &nbsp; / &nbsp; Zed</span><span>− &nbsp; □ &nbsp; ×</span></div>
   <div class="workspace">
     <aside>
-      <div class="folder">⌄ &nbsp; ember-room</div><div class="folder">&nbsp; ⌄ &nbsp; examples</div>
+      <div class="folder">⌄ &nbsp; cinderline</div><div class="folder">&nbsp; ⌄ &nbsp; examples</div>
       <div class="file chosen"><span class="ts">TS</span>room.ts <small>M</small></div>
       <div class="file">&nbsp; &nbsp; room.py</div><div class="file">&nbsp; &nbsp; notes.md</div>
       <div class="folder">&nbsp; › &nbsp; themes</div><div class="file">palette.css</div><div class="file">README.md</div>
@@ -164,23 +167,23 @@ footer { margin-top: 26px; color: var(--muted); font-size: 11px; display: flex; 
       <div class="breadcrumbs">examples &nbsp; › &nbsp; room.ts &nbsp; › &nbsp; createRoom</div>
       <div class="source">$code</div>
       <div class="terminal"><div class="terminal-heading"><span>Terminal</span><span>Diagnostics</span></div>
-        <div class="prompt"><b>❯</b> python examples/room.py<br><span class="ok">Ember Room:</span> 2700K / 65%<br><span class="muted">Graphite surfaces. A little warm light.</span></div>
+        <div class="prompt"><b>❯</b> python examples/room.py<br><span class="ok">Cinderline:</span> 2700K / 65%<br><span class="muted">Graphite surfaces. A little warm light.</span></div>
         <div class="ansi" aria-label="Normal and bright ANSI colors">$ansi</div>
       </div>
     </div>
   </div>
-  <div class="status"><span><span class="branch">⑂ main*</span> &nbsp; 0 errors &nbsp; 0 warnings</span><span>12:28 &nbsp; UTF-8 &nbsp; TypeScript &nbsp; Ember Room</span></div>
+  <div class="status"><span><span class="vim-normal">NORMAL</span><span class="branch">⑂ main*</span> &nbsp; 0 errors &nbsp; 0 warnings</span><span>12:28 &nbsp; UTF-8 &nbsp; TypeScript &nbsp; Cinderline</span></div>
 </section>
 <div class="details">
   <section class="card"><h2>FOCUS &amp; SELECTION</h2><div class="samples"><span class="selection">selected text</span><span>find <mark>createRoom</mark></span></div></section>
   <section class="card"><h2>SEMANTIC COLORS</h2><div class="samples"><span class="success">+ added</span><span class="warning">~ modified</span><span class="error">− removed</span></div></section>
 </div>
 <section class="swatches" aria-label="Основная палитра">$swatches</section>
-<footer><span>Сгенерировано из themes/ember-room.json. Эскиз, не скриншот редактора.</span><span>Dark only · Graphite surfaces · Ember orange</span></footer>
+<footer><span>Сгенерировано из themes/cinderline.json. Эскиз, не скриншот редактора.</span><span>Dark only · Graphite surfaces · Ember orange</span></footer>
 </main></body></html>
 ''').substitute(css=css, code=code, ansi=ansi, swatches=swatches)
 
 if __name__ == "__main__":
     path = ROOT / "preview.html"
     path.write_text(page, encoding="utf-8")
-    print(f"Generated {path.name} from Ember Room theme tokens")
+    print(f"Generated {path.name} from Cinderline theme tokens")

@@ -1,40 +1,43 @@
-/* Ember Room — semantic tokens for adapting your desktop and applications.
-   Source of truth: themes/ember-room.json. Hex alpha uses RRGGBBAA order. */
+/* Cinderline — semantic tokens for adapting your desktop and applications.
+   Source of truth: themes/cinderline.json. Hex alpha uses RRGGBBAA order. */
 :root {
   color-scheme: dark;
-  --ember-base: #111214;
-  --ember-editor: #181A1E;
-  --ember-surface: #1E2025;
-  --ember-elevated: #25282E;
-  --ember-hover: #2C3037;
-  --ember-selected: #2D333C;
-  --ember-border: #383D46;
-  --ember-divider: #2B2E35;
-  --ember-focus: #D87553;
-  --ember-text: #CDD1D8;
-  --ember-text-bright: #E1E4E9;
-  --ember-text-muted: #A5ABB5;
-  --ember-comment: #9AA1AB;
-  --ember-text-disabled: #686F7B;
-  --ember-orange: #FF8057;
-  --ember-orange-hover: #FFA07D;
-  --ember-keyword: #F28D68;
-  --ember-function: #8FB5C4;
-  --ember-type: #AABEC9;
-  --ember-amber: #D7C294;
-  --ember-peach: #E3B99B;
-  --ember-sage: #A7B89F;
-  --ember-slate: #8FAFBD;
-  --ember-sea-glass: #9ABBB5;
-  --ember-mauve: #B7AAC7;
-  --ember-error: #E28C91;
+  --cinderline-base: #101010;
+  --cinderline-editor: #151515;
+  --cinderline-surface: #1C1C1C;
+  --cinderline-elevated: #242424;
+  --cinderline-hover: #2C2C2C;
+  --cinderline-selected: #2E2E2E;
+  --cinderline-border: #383838;
+  --cinderline-divider: #2B2B2B;
+  --cinderline-focus: #D87553;
+  --cinderline-text: #D6D6D6;
+  --cinderline-editor-text: #D6D6D6;
+  --cinderline-text-bright: #E5E5E5;
+  --cinderline-text-muted: #B0B0B0;
+  --cinderline-comment: #9C9C9C;
+  --cinderline-text-disabled: #737373;
+  --cinderline-orange: #FF8057;
+  --cinderline-orange-hover: #FFA07D;
+  --cinderline-keyword: #F28D68;
+  --cinderline-function: #DDDDDD;
+  --cinderline-type: #C2C2C2;
+  --cinderline-silver: #CCCCCC;
+  --cinderline-amber: var(--cinderline-silver);
+  --cinderline-peach: #E3B99B;
+  --cinderline-sage: #A7B89F;
+  --cinderline-slate: #C2C2C2;
+  --cinderline-sea-glass: var(--cinderline-silver);
+  --cinderline-mauve: #B8B8B8;
+  --cinderline-error: #DD9387;
+  --cinderline-vim-normal: #D99565;
   /* Compatibility aliases for the first palette revision. */
-  --ember-copper: var(--ember-orange);
-  --ember-copper-hover: var(--ember-orange-hover);
-  --ember-clay: var(--ember-peach);
-  --ember-success: var(--ember-sage);
-  --ember-warning: var(--ember-amber);
-  --ember-info: var(--ember-slate);
-  --ember-selection: #8FAFBD26;
-  --ember-on-accent: #181A1E;
+  --cinderline-copper: var(--cinderline-orange);
+  --cinderline-copper-hover: var(--cinderline-orange-hover);
+  --cinderline-clay: var(--cinderline-peach);
+  --cinderline-success: var(--cinderline-sage);
+  --cinderline-warning: var(--cinderline-amber);
+  --cinderline-info: var(--cinderline-amber);
+  --cinderline-selection: #CCCCCC20;
+  --cinderline-on-accent: #151515;
 }

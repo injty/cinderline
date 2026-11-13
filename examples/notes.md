@@ -1,11 +1,11 @@
-# Ember Room
+# Cinderline
 
 A quiet place to make things. Тёплый свет и немного тишины.
 
 ## Evening notes
 
 - **Ember orange** for focus and language keywords.
-- **Smoky blue** for functions, steel for types.
+- **Soft white** for file tree text, silver for functions and types.
 - *Sage* for strings and successful operations.
 - `2700` kelvin light, graphite surfaces, soft silver text.
 - [Zed themes](https://zed.dev/docs/themes)
@@ -14,7 +14,7 @@ A quiet place to make things. Тёплый свет и немного тишин
 
 ```json
 {
-  "name": "Ember Room",
+  "name": "Cinderline",
   "appearance": "dark",
   "temperature": 2700,
   "lighting": true,
