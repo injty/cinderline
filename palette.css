@@ -23,21 +23,25 @@
   --cinderline-function: #dddddd;
   --cinderline-type: #c2c2c2;
   --cinderline-silver: #cccccc;
-  --cinderline-amber: var(--cinderline-silver);
+  --cinderline-amber: #e8bd79;
   --cinderline-peach: #e3b99b;
   --cinderline-sage: #a7b89f;
   --cinderline-slate: #c2c2c2;
   --cinderline-sea-glass: var(--cinderline-silver);
   --cinderline-mauve: #b8b8b8;
-  --cinderline-error: #dd9387;
+  --cinderline-error: #f07882;
+  --cinderline-added: #9bcb8f;
+  --cinderline-modified: #f2b578;
+  --cinderline-conflict: #e5a0b5;
+  --cinderline-ignored: #757575;
   --cinderline-vim-normal: #d99565;
   /* Compatibility aliases for the first palette revision. */
   --cinderline-copper: var(--cinderline-orange);
   --cinderline-copper-hover: var(--cinderline-orange-hover);
   --cinderline-clay: var(--cinderline-peach);
-  --cinderline-success: var(--cinderline-sage);
+  --cinderline-success: var(--cinderline-added);
   --cinderline-warning: var(--cinderline-amber);
-  --cinderline-info: var(--cinderline-amber);
+  --cinderline-info: var(--cinderline-silver);
   --cinderline-selection: #cccccc20;
   --cinderline-on-accent: #151515;
 }

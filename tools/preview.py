@@ -14,9 +14,10 @@ def token(capture, text):
     return f'<span style="color:{color}">{html.escape(text)}</span>'
 
 
-def line(*parts, active=False):
+def line(*parts, active=False, change=None):
     content = "".join(token(*part) if isinstance(part, tuple) else html.escape(part) for part in parts)
-    return f'<div class="line{" active" if active else ""}">{content or " "}</div>'
+    classes = "line" + (" active" if active else "") + (f" {change}" if change else "")
+    return f'<div class="{classes}">{content or " "}</div>'
 
 
 code = "".join([
@@ -34,10 +35,10 @@ code = "".join([
     line(),
     line(("keyword", "export function "), ("function", "createRoom"), "(",
          ("variable.parameter", "name"), ": ", ("type", "string"), "): ", ("type", "Room"), " {", active=True),
-    line("  ", ("comment", "// Leave room for the things that matter.")),
+    line("  ", ("comment", "// Leave room for the things that matter."), change="modified"),
     line("  ", ("keyword", "return"), " {"),
     line("    ", ("property", "name"), ","),
-    line("    ", ("property", "temperature"), ": ", ("constant", "EVENING_KELVIN"), ","),
+     line("    ", ("property", "temperature"), ": ", ("constant", "EVENING_KELVIN"), ",", change="added"),
     line("    ", ("property", "materials"), ": [", ("string", '"charcoal"'), ", ",
          ("string", '"copper"'), ", ", ("string", '"oak"'), "],"),
     line("  };"),
@@ -48,11 +49,16 @@ variables = {
     "base": "background", "editor": "editor.background", "surface": "surface.background",
     "elevated": "elevated_surface.background", "border": "border.variant",
     "text": "text", "muted": "text.muted", "accent": "text.accent",
-    "selected": "element.selected", "line": "editor.active_line.background",
+    "selected": "element.selected", "hover": "element.hover", "line": "editor.active_line.background",
     "number": "editor.line_number", "green": "success", "red": "error", "amber": "warning",
     "blue": "info", "search": "search.active_match_background",
     "editor-text": "editor.foreground", "terminal-text": "terminal.foreground",
     "vim-normal": "vim.normal.background", "vim-text": "vim.normal.foreground",
+    "modified": "modified", "created": "created", "deleted": "deleted",
+    "conflict": "conflict", "ignored": "ignored",
+    "added-bg": "editor.diff_hunk.added.background",
+    "deleted-bg": "editor.diff_hunk.deleted.background",
+    "word-added": "version_control.word_added", "word-deleted": "version_control.word_deleted",
 }
 css = "\n".join(f"--{name}: {STYLE[key]};" for name, key in variables.items())
 css += f"\n--selection: {STYLE['players'][0]['selection']};"
@@ -61,8 +67,18 @@ swatches = "".join(
     f'<span>{name}</span><code>{STYLE[key]}</code></div>'
     for name, key in [("Charcoal", "background"), ("Graphite", "editor.background"),
                       ("Soft white", "text"), ("Ember", "text.accent"),
-                      ("Silver", "warning"), ("Sage", "success"),
+                      ("Amber", "warning"), ("Green", "success"),
                       ("Normal", "vim.normal.background"), ("Clay", "error")]
+)
+state_rows = "".join(
+    f'<div class="file" style="color:{STYLE[key]}">{html.escape(name)}'
+    f'<small>{html.escape(mark)}</small></div>'
+    for key, name, mark in [
+        ("text", "unchanged.ts", ""), ("modified", "modified.ts", "M"),
+        ("created", "new.ts", "U"), ("ignored", "ignored.log", ""),
+        ("error", "error.ts", "×"), ("warning", "warning.ts", "!"),
+        ("conflict", "conflict.ts", "UU"),
+    ]
 )
 ansi = "".join(
     '<div class="ansi-row">' + "".join(
@@ -96,9 +112,11 @@ header p { color: var(--muted); margin: 0; }
 .workspace { display: grid; grid-template-columns: 190px minmax(0, 1fr); }
 aside { padding: 18px 9px; border-right: 1px solid var(--border); color: var(--muted); }
 .folder { padding: 6px 10px; color: var(--text); }
-.file { padding: 5px 12px 5px 25px; font-size: 13px; }
-.file.chosen { background: var(--selected); color: var(--text); border-radius: 4px; }
-.file small { float: right; color: var(--amber); }
+.file { padding: 5px 12px 5px 25px; font-size: 13px; color: var(--text); }
+.file.chosen { background: var(--selected); border-radius: 4px; }
+.file:hover { background: var(--selected); }
+.file small { float: right; color: inherit; }
+.file.modified { color: var(--modified); }
 .file .ts { color: var(--blue); margin-right: 9px; }
 .side-label { padding: 24px 10px 7px; font-size: 10px; letter-spacing: .12em; }
 .side-note { padding: 4px 10px; font-size: 12px; color: var(--muted); }
@@ -108,7 +126,9 @@ aside { padding: 18px 9px; border-right: 1px solid var(--border); color: var(--m
 .tab.current { background: var(--editor); color: var(--text); box-shadow: inset 0 2px var(--accent); }
 .breadcrumbs { color: var(--muted); font-size: 11px; padding: 8px 20px; }
 .source { overflow-x: auto; padding: 7px 0 20px; counter-reset: line; font: 14px/25px "Cascadia Code", Consolas, monospace; color: var(--editor-text); }
-.line { min-width: 720px; white-space: pre; padding-right: 24px; }
+.line { min-width: 720px; white-space: pre; padding-right: 24px; border-left: 3px solid transparent; }
+.line.modified { border-left-color: var(--modified); }
+.line.added { border-left-color: var(--created); background: var(--added-bg); }
 .line::before { counter-increment: line; content: counter(line); color: var(--number); display: inline-block; width: 50px; padding-right: 21px; text-align: right; user-select: none; }
 .line.active { background: var(--line); }
 .line.active::before { color: var(--accent); }
@@ -132,6 +152,16 @@ aside { padding: 18px 9px; border-right: 1px solid var(--border); color: var(--m
 .selection { background: var(--selection); color: var(--text); padding: 0 3px; }
 mark { background: var(--search); color: var(--text); padding: 0 3px; }
 .success { color: var(--green); } .warning { color: var(--amber); } .error { color: var(--red); }
+.diff-sample { background: var(--editor); padding: 6px; width: 100%; font-family: Consolas, monospace; }
+.diff-sample div { padding: 3px 8px; border-left: 3px solid; }
+.diff-sample .added { background: var(--added-bg); border-color: var(--created); }
+.diff-sample .deleted { background: var(--deleted-bg); border-color: var(--deleted); }
+.word-added { background: var(--word-added); } .word-deleted { background: var(--word-deleted); }
+.state-matrix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.state-matrix section { background: var(--base); }
+.state-matrix .hovered { background: var(--hover); }
+.state-matrix .selected { background: var(--selected); }
+.state-matrix h3 { padding: 0 12px; font-size: 12px; color: var(--muted); font-weight: normal; }
 .swatches { display: grid; grid-template-columns: repeat(8, 1fr); gap: 18px; margin-top: 28px; }
 .swatch i { display: block; height: 36px; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 9px; }
 .swatch span { display: block; font-size: 12px; }
@@ -157,7 +187,7 @@ footer { margin-top: 26px; color: var(--muted); font-size: 11px; display: flex; 
   <div class="workspace">
     <aside>
       <div class="folder">⌄ &nbsp; cinderline</div><div class="folder">&nbsp; ⌄ &nbsp; examples</div>
-      <div class="file chosen"><span class="ts">TS</span>room.ts <small>M</small></div>
+      <div class="file chosen modified"><span class="ts">TS</span>room.ts <small>M</small></div>
       <div class="file">&nbsp; &nbsp; room.py</div><div class="file">&nbsp; &nbsp; notes.md</div>
       <div class="folder">&nbsp; › &nbsp; themes</div><div class="file">palette.css</div><div class="file">README.md</div>
       <div class="side-label">WORKSPACE</div><div class="side-note">Dark graphite.<br>A spark of orange.<br>A little space to think.</div>
@@ -176,12 +206,14 @@ footer { margin-top: 26px; color: var(--muted); font-size: 11px; display: flex; 
 </section>
 <div class="details">
   <section class="card"><h2>FOCUS &amp; SELECTION</h2><div class="samples"><span class="selection">selected text</span><span>find <mark>createRoom</mark></span></div></section>
-  <section class="card"><h2>SEMANTIC COLORS</h2><div class="samples"><span class="success">+ added</span><span class="warning">~ modified</span><span class="error">− removed</span></div></section>
+  <section class="card"><h2>GIT DIFF</h2><div class="samples"><span class="success">+ added</span><span style="color:var(--modified)">~ modified</span><span class="error">− removed</span><div class="diff-sample"><div class="deleted">− const light = <span class="word-deleted">false</span>;</div><div class="added">+ const light = <span class="word-added">true</span>;</div></div></div></section>
 </div>
+<section class="card" style="margin-top:16px"><h2>FILE STATES — COLOR STUDY, NOT ZED BADGE LAYOUT</h2>
+<div class="state-matrix"><section><h3>Normal</h3>$state_rows</section><section class="hovered"><h3>Hover</h3>$state_rows</section><section class="selected"><h3>Selected</h3>$state_rows</section></div></section>
 <section class="swatches" aria-label="Основная палитра">$swatches</section>
 <footer><span>Сгенерировано из themes/cinderline.json. Эскиз, не скриншот редактора.</span><span>Dark only · Graphite surfaces · Ember orange</span></footer>
 </main></body></html>
-''').substitute(css=css, code=code, ansi=ansi, swatches=swatches)
+''').substitute(css=css, code=code, ansi=ansi, swatches=swatches, state_rows=state_rows)
 
 if __name__ == "__main__":
     path = ROOT / "preview.html"

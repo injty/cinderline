@@ -15,17 +15,27 @@
 --muted: #B0B0B0;
 --accent: #FF8057;
 --selected: #2E2E2E;
+--hover: #2C2C2C;
 --line: #1C1C1C;
 --number: #797979;
---green: #A7B89F;
---red: #DD9387;
---amber: #CCCCCC;
+--green: #9BCB8F;
+--red: #F07882;
+--amber: #E8BD79;
 --blue: #CCCCCC;
---search: #FF805724;
+--search: #FF805730;
 --editor-text: #D6D6D6;
 --terminal-text: #D6D6D6;
 --vim-normal: #D99565;
 --vim-text: #151515;
+--modified: #F2B578;
+--created: #9BCB8F;
+--deleted: #F07882;
+--conflict: #E5A0B5;
+--ignored: #757575;
+--added-bg: #9BCB8F20;
+--deleted-bg: #F0788220;
+--word-added: #9BCB8F26;
+--word-deleted: #F0788230;
 --selection: #CCCCCC20; }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--base); color: var(--text); font: 14px/1.6 "Segoe UI", sans-serif; }
@@ -43,9 +53,11 @@ header p { color: var(--muted); margin: 0; }
 .workspace { display: grid; grid-template-columns: 190px minmax(0, 1fr); }
 aside { padding: 18px 9px; border-right: 1px solid var(--border); color: var(--muted); }
 .folder { padding: 6px 10px; color: var(--text); }
-.file { padding: 5px 12px 5px 25px; font-size: 13px; }
-.file.chosen { background: var(--selected); color: var(--text); border-radius: 4px; }
-.file small { float: right; color: var(--amber); }
+.file { padding: 5px 12px 5px 25px; font-size: 13px; color: var(--text); }
+.file.chosen { background: var(--selected); border-radius: 4px; }
+.file:hover { background: var(--selected); }
+.file small { float: right; color: inherit; }
+.file.modified { color: var(--modified); }
 .file .ts { color: var(--blue); margin-right: 9px; }
 .side-label { padding: 24px 10px 7px; font-size: 10px; letter-spacing: .12em; }
 .side-note { padding: 4px 10px; font-size: 12px; color: var(--muted); }
@@ -55,7 +67,9 @@ aside { padding: 18px 9px; border-right: 1px solid var(--border); color: var(--m
 .tab.current { background: var(--editor); color: var(--text); box-shadow: inset 0 2px var(--accent); }
 .breadcrumbs { color: var(--muted); font-size: 11px; padding: 8px 20px; }
 .source { overflow-x: auto; padding: 7px 0 20px; counter-reset: line; font: 14px/25px "Cascadia Code", Consolas, monospace; color: var(--editor-text); }
-.line { min-width: 720px; white-space: pre; padding-right: 24px; }
+.line { min-width: 720px; white-space: pre; padding-right: 24px; border-left: 3px solid transparent; }
+.line.modified { border-left-color: var(--modified); }
+.line.added { border-left-color: var(--created); background: var(--added-bg); }
 .line::before { counter-increment: line; content: counter(line); color: var(--number); display: inline-block; width: 50px; padding-right: 21px; text-align: right; user-select: none; }
 .line.active { background: var(--line); }
 .line.active::before { color: var(--accent); }
@@ -79,6 +93,16 @@ aside { padding: 18px 9px; border-right: 1px solid var(--border); color: var(--m
 .selection { background: var(--selection); color: var(--text); padding: 0 3px; }
 mark { background: var(--search); color: var(--text); padding: 0 3px; }
 .success { color: var(--green); } .warning { color: var(--amber); } .error { color: var(--red); }
+.diff-sample { background: var(--editor); padding: 6px; width: 100%; font-family: Consolas, monospace; }
+.diff-sample div { padding: 3px 8px; border-left: 3px solid; }
+.diff-sample .added { background: var(--added-bg); border-color: var(--created); }
+.diff-sample .deleted { background: var(--deleted-bg); border-color: var(--deleted); }
+.word-added { background: var(--word-added); } .word-deleted { background: var(--word-deleted); }
+.state-matrix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.state-matrix section { background: var(--base); }
+.state-matrix .hovered { background: var(--hover); }
+.state-matrix .selected { background: var(--selected); }
+.state-matrix h3 { padding: 0 12px; font-size: 12px; color: var(--muted); font-weight: normal; }
 .swatches { display: grid; grid-template-columns: repeat(8, 1fr); gap: 18px; margin-top: 28px; }
 .swatch i { display: block; height: 36px; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 9px; }
 .swatch span { display: block; font-size: 12px; }
@@ -104,7 +128,7 @@ footer { margin-top: 26px; color: var(--muted); font-size: 11px; display: flex; 
   <div class="workspace">
     <aside>
       <div class="folder">⌄ &nbsp; cinderline</div><div class="folder">&nbsp; ⌄ &nbsp; examples</div>
-      <div class="file chosen"><span class="ts">TS</span>room.ts <small>M</small></div>
+      <div class="file chosen modified"><span class="ts">TS</span>room.ts <small>M</small></div>
       <div class="file">&nbsp; &nbsp; room.py</div><div class="file">&nbsp; &nbsp; notes.md</div>
       <div class="folder">&nbsp; › &nbsp; themes</div><div class="file">palette.css</div><div class="file">README.md</div>
       <div class="side-label">WORKSPACE</div><div class="side-note">Dark graphite.<br>A spark of orange.<br>A little space to think.</div>
@@ -112,10 +136,10 @@ footer { margin-top: 26px; color: var(--muted); font-size: 11px; display: flex; 
     <div class="editor">
       <div class="tabs"><div class="tab current">room.ts &nbsp; ·</div><div class="tab">notes.md</div></div>
       <div class="breadcrumbs">examples &nbsp; › &nbsp; room.ts &nbsp; › &nbsp; createRoom</div>
-      <div class="source"><div class="line"><span style="color:#B0B0B0">/** A quiet workspace, lit by a single warm lamp. */</span></div><div class="line"><span style="color:#F28D68">type </span><span style="color:#C2C2C2">Material</span> = <span style="color:#A7B89F">&quot;charcoal&quot;</span> | <span style="color:#A7B89F">&quot;copper&quot;</span> | <span style="color:#A7B89F">&quot;oak&quot;</span>;</div><div class="line"> </div><div class="line"><span style="color:#F28D68">interface </span><span style="color:#C2C2C2">Room</span> {</div><div class="line">  <span style="color:#C6C6C6">name</span>: <span style="color:#C2C2C2">string</span>;</div><div class="line">  <span style="color:#C6C6C6">temperature</span>: <span style="color:#C2C2C2">number</span>;</div><div class="line">  <span style="color:#C6C6C6">materials</span>: <span style="color:#C2C2C2">Material</span>[];</div><div class="line">}</div><div class="line"> </div><div class="line"><span style="color:#F28D68">const </span><span style="color:#E3B99B">EVENING_KELVIN</span> = <span style="color:#E3B99B">2700</span>;</div><div class="line"> </div><div class="line active"><span style="color:#F28D68">export function </span><span style="color:#DDDDDD">createRoom</span>(<span style="color:#CDCDCD">name</span>: <span style="color:#C2C2C2">string</span>): <span style="color:#C2C2C2">Room</span> {</div><div class="line">  <span style="color:#9C9C9C">// Leave room for the things that matter.</span></div><div class="line">  <span style="color:#F28D68">return</span> {</div><div class="line">    <span style="color:#C6C6C6">name</span>,</div><div class="line">    <span style="color:#C6C6C6">temperature</span>: <span style="color:#E3B99B">EVENING_KELVIN</span>,</div><div class="line">    <span style="color:#C6C6C6">materials</span>: [<span style="color:#A7B89F">&quot;charcoal&quot;</span>, <span style="color:#A7B89F">&quot;copper&quot;</span>, <span style="color:#A7B89F">&quot;oak&quot;</span>],</div><div class="line">  };</div><div class="line">}</div></div>
+      <div class="source"><div class="line"><span style="color:#B0B0B0">/** A quiet workspace, lit by a single warm lamp. */</span></div><div class="line"><span style="color:#F28D68">type </span><span style="color:#C2C2C2">Material</span> = <span style="color:#A7B89F">&quot;charcoal&quot;</span> | <span style="color:#A7B89F">&quot;copper&quot;</span> | <span style="color:#A7B89F">&quot;oak&quot;</span>;</div><div class="line"> </div><div class="line"><span style="color:#F28D68">interface </span><span style="color:#C2C2C2">Room</span> {</div><div class="line">  <span style="color:#C6C6C6">name</span>: <span style="color:#C2C2C2">string</span>;</div><div class="line">  <span style="color:#C6C6C6">temperature</span>: <span style="color:#C2C2C2">number</span>;</div><div class="line">  <span style="color:#C6C6C6">materials</span>: <span style="color:#C2C2C2">Material</span>[];</div><div class="line">}</div><div class="line"> </div><div class="line"><span style="color:#F28D68">const </span><span style="color:#E3B99B">EVENING_KELVIN</span> = <span style="color:#E3B99B">2700</span>;</div><div class="line"> </div><div class="line active"><span style="color:#F28D68">export function </span><span style="color:#DDDDDD">createRoom</span>(<span style="color:#CDCDCD">name</span>: <span style="color:#C2C2C2">string</span>): <span style="color:#C2C2C2">Room</span> {</div><div class="line modified">  <span style="color:#9C9C9C">// Leave room for the things that matter.</span></div><div class="line">  <span style="color:#F28D68">return</span> {</div><div class="line">    <span style="color:#C6C6C6">name</span>,</div><div class="line added">    <span style="color:#C6C6C6">temperature</span>: <span style="color:#E3B99B">EVENING_KELVIN</span>,</div><div class="line">    <span style="color:#C6C6C6">materials</span>: [<span style="color:#A7B89F">&quot;charcoal&quot;</span>, <span style="color:#A7B89F">&quot;copper&quot;</span>, <span style="color:#A7B89F">&quot;oak&quot;</span>],</div><div class="line">  };</div><div class="line">}</div></div>
       <div class="terminal"><div class="terminal-heading"><span>Terminal</span><span>Diagnostics</span></div>
         <div class="prompt"><b>❯</b> python examples/room.py<br><span class="ok">Cinderline:</span> 2700K / 65%<br><span class="muted">Graphite surfaces. A little warm light.</span></div>
-        <div class="ansi" aria-label="Normal and bright ANSI colors"><div class="ansi-row"><i title="black" style="background:#2B2B2B"></i><i title="red" style="background:#DD9387"></i><i title="green" style="background:#A7B89F"></i><i title="yellow" style="background:#CCCCCC"></i><i title="blue" style="background:#C2C2C2"></i><i title="magenta" style="background:#B8B8B8"></i><i title="cyan" style="background:#CCCCCC"></i><i title="white" style="background:#D6D6D6"></i></div><div class="ansi-row"><i title="bright_black" style="background:#9C9C9C"></i><i title="bright_red" style="background:#EFAF9F"></i><i title="bright_green" style="background:#BECCB5"></i><i title="bright_yellow" style="background:#E0E0E0"></i><i title="bright_blue" style="background:#D8D8D8"></i><i title="bright_magenta" style="background:#D0D0D0"></i><i title="bright_cyan" style="background:#DEDEDE"></i><i title="bright_white" style="background:#E5E5E5"></i></div></div>
+        <div class="ansi" aria-label="Normal and bright ANSI colors"><div class="ansi-row"><i title="black" style="background:#2B2B2B"></i><i title="red" style="background:#F07882"></i><i title="green" style="background:#9BCB8F"></i><i title="yellow" style="background:#E8BD79"></i><i title="blue" style="background:#C2C2C2"></i><i title="magenta" style="background:#B8B8B8"></i><i title="cyan" style="background:#CCCCCC"></i><i title="white" style="background:#D6D6D6"></i></div><div class="ansi-row"><i title="bright_black" style="background:#9C9C9C"></i><i title="bright_red" style="background:#EFAF9F"></i><i title="bright_green" style="background:#BECCB5"></i><i title="bright_yellow" style="background:#F5D49C"></i><i title="bright_blue" style="background:#D8D8D8"></i><i title="bright_magenta" style="background:#D0D0D0"></i><i title="bright_cyan" style="background:#DEDEDE"></i><i title="bright_white" style="background:#E5E5E5"></i></div></div>
       </div>
     </div>
   </div>
@@ -123,8 +147,10 @@ footer { margin-top: 26px; color: var(--muted); font-size: 11px; display: flex; 
 </section>
 <div class="details">
   <section class="card"><h2>FOCUS &amp; SELECTION</h2><div class="samples"><span class="selection">selected text</span><span>find <mark>createRoom</mark></span></div></section>
-  <section class="card"><h2>SEMANTIC COLORS</h2><div class="samples"><span class="success">+ added</span><span class="warning">~ modified</span><span class="error">− removed</span></div></section>
+  <section class="card"><h2>GIT DIFF</h2><div class="samples"><span class="success">+ added</span><span style="color:var(--modified)">~ modified</span><span class="error">− removed</span><div class="diff-sample"><div class="deleted">− const light = <span class="word-deleted">false</span>;</div><div class="added">+ const light = <span class="word-added">true</span>;</div></div></div></section>
 </div>
-<section class="swatches" aria-label="Основная палитра"><div class="swatch"><i style="background:#101010"></i><span>Charcoal</span><code>#101010</code></div><div class="swatch"><i style="background:#151515"></i><span>Graphite</span><code>#151515</code></div><div class="swatch"><i style="background:#D6D6D6"></i><span>Soft white</span><code>#D6D6D6</code></div><div class="swatch"><i style="background:#FF8057"></i><span>Ember</span><code>#FF8057</code></div><div class="swatch"><i style="background:#CCCCCC"></i><span>Silver</span><code>#CCCCCC</code></div><div class="swatch"><i style="background:#A7B89F"></i><span>Sage</span><code>#A7B89F</code></div><div class="swatch"><i style="background:#D99565"></i><span>Normal</span><code>#D99565</code></div><div class="swatch"><i style="background:#DD9387"></i><span>Clay</span><code>#DD9387</code></div></section>
+<section class="card" style="margin-top:16px"><h2>FILE STATES — COLOR STUDY, NOT ZED BADGE LAYOUT</h2>
+<div class="state-matrix"><section><h3>Normal</h3><div class="file" style="color:#D6D6D6">unchanged.ts<small></small></div><div class="file" style="color:#F2B578">modified.ts<small>M</small></div><div class="file" style="color:#9BCB8F">new.ts<small>U</small></div><div class="file" style="color:#757575">ignored.log<small></small></div><div class="file" style="color:#F07882">error.ts<small>×</small></div><div class="file" style="color:#E8BD79">warning.ts<small>!</small></div><div class="file" style="color:#E5A0B5">conflict.ts<small>UU</small></div></section><section class="hovered"><h3>Hover</h3><div class="file" style="color:#D6D6D6">unchanged.ts<small></small></div><div class="file" style="color:#F2B578">modified.ts<small>M</small></div><div class="file" style="color:#9BCB8F">new.ts<small>U</small></div><div class="file" style="color:#757575">ignored.log<small></small></div><div class="file" style="color:#F07882">error.ts<small>×</small></div><div class="file" style="color:#E8BD79">warning.ts<small>!</small></div><div class="file" style="color:#E5A0B5">conflict.ts<small>UU</small></div></section><section class="selected"><h3>Selected</h3><div class="file" style="color:#D6D6D6">unchanged.ts<small></small></div><div class="file" style="color:#F2B578">modified.ts<small>M</small></div><div class="file" style="color:#9BCB8F">new.ts<small>U</small></div><div class="file" style="color:#757575">ignored.log<small></small></div><div class="file" style="color:#F07882">error.ts<small>×</small></div><div class="file" style="color:#E8BD79">warning.ts<small>!</small></div><div class="file" style="color:#E5A0B5">conflict.ts<small>UU</small></div></section></div></section>
+<section class="swatches" aria-label="Основная палитра"><div class="swatch"><i style="background:#101010"></i><span>Charcoal</span><code>#101010</code></div><div class="swatch"><i style="background:#151515"></i><span>Graphite</span><code>#151515</code></div><div class="swatch"><i style="background:#D6D6D6"></i><span>Soft white</span><code>#D6D6D6</code></div><div class="swatch"><i style="background:#FF8057"></i><span>Ember</span><code>#FF8057</code></div><div class="swatch"><i style="background:#E8BD79"></i><span>Amber</span><code>#E8BD79</code></div><div class="swatch"><i style="background:#9BCB8F"></i><span>Green</span><code>#9BCB8F</code></div><div class="swatch"><i style="background:#D99565"></i><span>Normal</span><code>#D99565</code></div><div class="swatch"><i style="background:#F07882"></i><span>Clay</span><code>#F07882</code></div></section>
 <footer><span>Сгенерировано из themes/cinderline.json. Эскиз, не скриншот редактора.</span><span>Dark only · Graphite surfaces · Ember orange</span></footer>
 </main></body></html>

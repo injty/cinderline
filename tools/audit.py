@@ -2,6 +2,7 @@
 
 import json
 import re
+from itertools import combinations
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -103,9 +104,38 @@ def main():
                   "element.hover", "element.active", "element.selected"):
         for key in ("text", "text.muted", "text.placeholder", "text.accent"):
             check(f"{key} / {state}", style[key], rgba(style[state]))
-    for name in ("error", "warning", "success", "info", "hint", "created", "deleted"):
+    for name in ("error", "warning", "success", "info", "hint", "created", "deleted",
+                 "modified", "renamed", "conflict"):
         bg = over(rgba(style[name + ".background"]), rgba(style["elevated_surface.background"]))
         check(name, style[name], bg)
+
+    # State colors need to stand out from normal names, not merely the background.
+    # RGB distance is a palette regression heuristic, not an accessibility metric.
+    def distance(first, second):
+        return sum(((a - b) * 255) ** 2
+                   for a, b in zip(rgba(first)[:3], rgba(second)[:3])) ** 0.5
+
+    states = ("modified", "created", "deleted", "conflict")
+    for key in states:
+        assert distance(style[key], style["text"]) >= 65, f"{key} blends into file names"
+    for first, second in combinations(states, 2):
+        assert distance(style[first], style[second]) >= 60, f"{first} resembles {second}"
+    for state in ("panel.background", "element.hover", "element.selected"):
+        for key in (*states, "warning", "renamed"):
+            check(f"file {key} / {state}", style[key], rgba(style[state]))
+        check(f"file ignored / {state}", style["ignored"], rgba(style[state]), 2.8)
+    assert luminance(rgba(style["ignored"])) < luminance(rgba(style["text.muted"])) * 0.5
+    for vcs, state in (("added", "created"), ("modified", "modified"), ("deleted", "deleted"),
+                       ("renamed", "renamed"), ("conflict", "conflict"), ("ignored", "ignored")):
+        assert style[f"version_control.{vcs}"] == style[state], f"Inconsistent Git color: {vcs}"
+    for key in ("version_control.added", "version_control.modified", "version_control.deleted"):
+        check(f"gutter {key}", style[key], editor, 3.0)
+    for key in ("editor.diff_hunk.added.background", "editor.diff_hunk.deleted.background",
+                "version_control.word_added", "version_control.word_deleted",
+                "search.match_background", "search.active_match_background"):
+        check(f"visible overlay {key}", style[key], active, 1.15)
+    for key in ("editor.diff_hunk.added.hollow_border", "editor.diff_hunk.deleted.hollow_border"):
+        check(f"diff border {key}", style[key], active, 3.0)
 
     for key, color in style.items():
         if key.startswith("terminal.ansi."):
