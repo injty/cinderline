@@ -2,10 +2,11 @@
 
 import json
 import re
-from itertools import combinations
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+# Exact foreground colors from cinderline.omp.json; dark neutral surfaces are Zed-specific.
+PALETTE = {"#D6D6D6", "#B0B0B0", "#737373", "#CCCCCC", "#D99565", "#A7B89F", "#DD9387"}
 
 
 def unique_object(pairs):
@@ -64,8 +65,11 @@ def main():
 
     inspect(style)
     for color in colors:
-        red, _, blue, _ = rgba(color)
-        assert blue <= red, f"Unexpected blue/cyan undertone: {color}"
+        red, green, blue, _ = rgba(color)
+        assert color[:7] in PALETTE or red == green == blue <= 0.55, (
+            f"Color outside prompt palette or neutral surfaces: {color}")
+    for name, token in syntax.items():
+        assert token["color"] in PALETTE, f"Syntax color outside prompt palette: {name}"
     css = (ROOT / "palette.css").read_text(encoding="utf-8")
     for color in re.findall(r"#[0-9a-fA-F]{6,8}\b", css):
         assert color.upper() in colors, f"Palette color missing from theme: {color}"
@@ -109,17 +113,11 @@ def main():
         bg = over(rgba(style[name + ".background"]), rgba(style["elevated_surface.background"]))
         check(name, style[name], bg)
 
-    # State colors need to stand out from normal names, not merely the background.
-    # RGB distance is a palette regression heuristic, not an accessibility metric.
-    def distance(first, second):
-        return sum(((a - b) * 255) ** 2
-                   for a, b in zip(rgba(first)[:3], rgba(second)[:3])) ** 0.5
-
     states = ("modified", "created", "deleted", "conflict")
-    for key in states:
-        assert distance(style[key], style["text"]) >= 65, f"{key} blends into file names"
-    for first, second in combinations(states, 2):
-        assert distance(style[first], style[second]) >= 60, f"{first} resembles {second}"
+    # Match the prompt's Git semantics, including shared deleted/conflict colors.
+    for key, color in (("modified", "#CCCCCC"), ("created", "#A7B89F"),
+                       ("deleted", "#DD9387"), ("conflict", "#DD9387")):
+        assert style[key] == color, f"Git color differs from prompt: {key}"
     for state in ("panel.background", "element.hover", "element.selected"):
         for key in (*states, "warning", "renamed"):
             check(f"file {key} / {state}", style[key], rgba(style[state]))
