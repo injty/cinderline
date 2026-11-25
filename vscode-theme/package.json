@@ -1,0 +1,26 @@
+{
+  "name": "cinderline",
+  "displayName": "Cinderline",
+  "description": "An asphalt-gray theme with silver text and warm accents, ported from Zed.",
+  "version": "0.1.0",
+  "publisher": "injty",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/injty/cinderline.git"
+  },
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": ["Themes"],
+  "files": ["LICENSE", "themes/cinderline-color-theme.json"],
+  "contributes": {
+    "themes": [
+      {
+        "label": "Cinderline",
+        "uiTheme": "vs-dark",
+        "path": "./themes/cinderline-color-theme.json"
+      }
+    ]
+  }
+}
