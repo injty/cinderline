@@ -6,44 +6,47 @@ from pathlib import Path
 from string import Template
 
 ROOT = Path(__file__).resolve().parents[1]
-STYLE = json.loads((ROOT / "themes/cinderline.json").read_text(encoding="utf-8"))["themes"][0]["style"]
 
 
-def token(capture, text):
-    color = STYLE["syntax"][capture]["color"]
+def token(style, capture, text):
+    color = style["syntax"][capture]["color"]
     return f'<span style="color:{color}">{html.escape(text)}</span>'
 
 
-def line(*parts, active=False, change=None):
-    content = "".join(token(*part) if isinstance(part, tuple) else html.escape(part) for part in parts)
+def source_line(style, *parts, active=False, change=None):
+    content = "".join(token(style, *part) if isinstance(part, tuple) else html.escape(part) for part in parts)
     classes = "line" + (" active" if active else "") + (f" {change}" if change else "")
     return f'<div class="{classes}">{content or " "}</div>'
 
 
-code = "".join([
-    line(("comment.doc", "/** A quiet workspace, lit by a single warm lamp. */")),
-    line(("keyword", "type "), ("type", "Material"), " = ", ("string", '"charcoal"'), " | ",
-         ("string", '"copper"'), " | ", ("string", '"oak"'), ";"),
-    line(),
-    line(("keyword", "interface "), ("type", "Room"), " {"),
-    line("  ", ("property", "name"), ": ", ("type", "string"), ";"),
-    line("  ", ("property", "temperature"), ": ", ("type", "number"), ";"),
-    line("  ", ("property", "materials"), ": ", ("type", "Material"), "[];"),
-    line("}"),
-    line(),
-    line(("keyword", "const "), ("constant", "EVENING_KELVIN"), " = ", ("number", "2700"), ";"),
-    line(),
-    line(("keyword", "export function "), ("function", "createRoom"), "(",
-         ("variable.parameter", "name"), ": ", ("type", "string"), "): ", ("type", "Room"), " {", active=True),
-    line("  ", ("comment", "// Leave room for the things that matter."), change="modified"),
-    line("  ", ("keyword", "return"), " {"),
-    line("    ", ("property", "name"), ","),
-     line("    ", ("property", "temperature"), ": ", ("constant", "EVENING_KELVIN"), ",", change="added"),
-    line("    ", ("property", "materials"), ": [", ("string", '"charcoal"'), ", ",
-         ("string", '"copper"'), ", ", ("string", '"oak"'), "],"),
-    line("  };"),
-    line("}"),
-])
+def sample(style):
+    def line(*parts, **kwargs):
+        return source_line(style, *parts, **kwargs)
+
+    return "".join([
+        line(("comment.doc", "/** A quiet workspace, lit by a single warm lamp. */")),
+        line(("keyword", "type "), ("type", "Material"), " = ", ("string", '"charcoal"'), " | ",
+             ("string", '"copper"'), " | ", ("string", '"oak"'), ";"),
+        line(),
+        line(("keyword", "interface "), ("type", "Room"), " {"),
+        line("  ", ("property", "name"), ": ", ("type.builtin", "string"), ";"),
+        line("  ", ("property", "temperature"), ": ", ("type.builtin", "number"), ";"),
+        line("  ", ("property", "materials"), ": ", ("type", "Material"), "[];"),
+        line("}"),
+        line(),
+        line(("keyword", "const "), ("constant", "EVENING_KELVIN"), " = ", ("number", "2700"), ";"),
+        line(),
+        line(("keyword", "export function "), ("function", "createRoom"), "(",
+             ("variable.parameter", "name"), ": ", ("type.builtin", "string"), "): ", ("type", "Room"), " {", active=True),
+        line("  ", ("comment", "// Leave room for the things that matter."), change="modified"),
+        line("  ", ("keyword", "return"), " {"),
+        line("    ", ("property", "name"), ","),
+        line("    ", ("property", "temperature"), ": ", ("constant", "EVENING_KELVIN"), ",", change="added"),
+        line("    ", ("property", "materials"), ": [", ("string", '"charcoal"'), ", ",
+             ("string", '"copper"'), ", ", ("string", '"oak"'), "],"),
+        line("  };"),
+        line("}"),
+    ])
 
 variables = {
     "base": "background", "editor": "editor.background", "surface": "surface.background",
@@ -51,7 +54,7 @@ variables = {
     "text": "text", "muted": "text.muted", "accent": "text.accent",
     "selected": "element.selected", "hover": "element.hover", "line": "editor.active_line.background",
     "number": "editor.line_number", "green": "success", "red": "error", "amber": "warning",
-    "blue": "info", "search": "search.active_match_background",
+    "info": "info", "search": "search.active_match_background",
     "editor-text": "editor.foreground", "terminal-text": "terminal.foreground",
     "vim-normal": "vim.normal.background", "vim-text": "vim.normal.foreground",
     "modified": "modified", "created": "created", "deleted": "deleted",
@@ -60,34 +63,34 @@ variables = {
     "deleted-bg": "editor.diff_hunk.deleted.background",
     "word-added": "version_control.word_added", "word-deleted": "version_control.word_deleted",
 }
-css = "\n".join(f"--{name}: {STYLE[key]};" for name, key in variables.items())
-css += f"\n--selection: {STYLE['players'][0]['selection']};"
-swatches = "".join(
-    f'<div class="swatch"><i style="background:{STYLE[key]}"></i>'
-    f'<span>{name}</span><code>{STYLE[key]}</code></div>'
-    for name, key in [("Charcoal", "background"), ("Graphite", "editor.background"),
-                      ("Soft white", "text"), ("Ember", "text.accent"),
-                      ("Amber", "warning"), ("Green", "success"),
-                      ("Normal", "vim.normal.background"), ("Clay", "error")]
-)
-state_rows = "".join(
-    f'<div class="file" style="color:{STYLE[key]}">{html.escape(name)}'
-    f'<small>{html.escape(mark)}</small></div>'
-    for key, name, mark in [
-        ("text", "unchanged.ts", ""), ("modified", "modified.ts", "M"),
-        ("created", "new.ts", "U"), ("ignored", "ignored.log", ""),
-        ("error", "error.ts", "×"), ("warning", "warning.ts", "!"),
-        ("conflict", "conflict.ts", "UU"),
-    ]
-)
-ansi = "".join(
-    '<div class="ansi-row">' + "".join(
-        f'<i title="{prefix}{name}" style="background:{STYLE["terminal.ansi." + prefix + name]}"></i>'
-        for name in ("black", "red", "green", "yellow", "blue", "magenta", "cyan", "white")
-    ) + "</div>" for prefix in ("", "bright_")
-)
+def render(style):
+    css = "\n".join(f"--{name}: {style[key]};" for name, key in variables.items())
+    css += f"\n--selection: {style['players'][0]['selection']};"
+    swatches = "".join(
+        f'<div class="swatch"><i style="background:{style[key]}"></i>'
+        f'<span>{name}</span><code>{style[key]}</code></div>'
+        for name, key in [("Asphalt", "background"), ("Chalk", "text"), ("Copper", "text.accent"),
+                          ("Lichen", "created"), ("Bright orange", "warning"), ("Terracotta", "error"),
+                          ("Brass", "renamed"), ("Mauve", "conflict")]
+    )
+    state_rows = "".join(
+        f'<div class="file" style="color:{style[key]}">{name}<small>{mark}</small></div>'
+        for key, name, mark in [("text", "unchanged.ts", ""), ("modified", "modified.ts", "M"),
+                                ("modified", "broken.tsx", '<span class="error" title="1 ошибка">1</span> M'),
+                                ("created", "new.tsx", '<span class="warning" title="2 предупреждения">2</span> U'),
+                                ("created", "untracked.ts", "U"), ("created", "staged.ts", "A"),
+                                ("deleted", "removed.ts", "D"), ("renamed", "renamed.ts", "R"),
+                                ("conflict", "conflict.ts", "!"), ("ignored", "ignored.log", "")]
+    )
+    ansi = "".join(
+        '<div class="ansi-row">' + "".join(
+            f'<i title="{prefix}{name}" style="background:{style["terminal.ansi." + prefix + name]}"></i>'
+            for name in ("black", "red", "green", "yellow", "blue", "magenta", "cyan", "white")
+        ) + "</div>" for prefix in ("", "bright_")
+    )
+    return PAGE.substitute(css=css, code=sample(style), ansi=ansi, swatches=swatches, state_rows=state_rows)
 
-page = Template('''<!doctype html>
+PAGE = Template('''<!doctype html>
 <html lang="ru">
 <head>
 <meta charset="utf-8">
@@ -117,7 +120,7 @@ aside { padding: 18px 9px; border-right: 1px solid var(--border); color: var(--m
 .file:hover { background: var(--selected); }
 .file small { float: right; color: inherit; }
 .file.modified { color: var(--modified); }
-.file .ts { color: var(--blue); margin-right: 9px; }
+.file .ts { color: var(--info); margin-right: 9px; }
 .side-label { padding: 24px 10px 7px; font-size: 10px; letter-spacing: .12em; }
 .side-note { padding: 4px 10px; font-size: 12px; color: var(--muted); }
 .editor { background: var(--editor); min-width: 0; }
@@ -213,9 +216,10 @@ footer { margin-top: 26px; color: var(--muted); font-size: 11px; display: flex; 
 <section class="swatches" aria-label="Основная палитра">$swatches</section>
 <footer><span>Сгенерировано из themes/cinderline.json. Эскиз, не скриншот редактора.</span><span>Dark only · Graphite surfaces · Ember orange</span></footer>
 </main></body></html>
-''').substitute(css=css, code=code, ansi=ansi, swatches=swatches, state_rows=state_rows)
+''')
 
 if __name__ == "__main__":
     path = ROOT / "preview.html"
-    path.write_text(page, encoding="utf-8")
+    style = json.loads((ROOT / "themes/cinderline.json").read_text(encoding="utf-8"))["themes"][0]["style"]
+    path.write_text(render(style), encoding="utf-8")
     print(f"Generated {path.name} from Cinderline theme tokens")

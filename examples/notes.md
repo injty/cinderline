@@ -5,7 +5,7 @@ A quiet place to make things. Тёплый свет и немного тишин
 ## Evening notes
 
 - **Ember orange** for focus and language keywords.
-- **Soft white** for file tree text, silver for functions and types.
+- **Soft white** for unchanged files, pale copper for functions and warm clay for types.
 - *Sage* for strings and successful operations.
 - `2700` kelvin light, graphite surfaces, soft silver text.
 - [Zed themes](https://zed.dev/docs/themes)

@@ -2,20 +2,10 @@
 
 import json
 import re
-from pathlib import Path
+from itertools import combinations
+from math import dist
 
-ROOT = Path(__file__).resolve().parents[1]
-# Exact foreground colors from cinderline.omp.json; dark neutral surfaces are Zed-specific.
-PALETTE = {"#D6D6D6", "#B0B0B0", "#737373", "#CCCCCC", "#D99565", "#A7B89F", "#DD9387"}
-
-
-def unique_object(pairs):
-    result = {}
-    for key, value in pairs:
-        if key in result:
-            raise ValueError(f"Duplicate JSON key: {key}")
-        result[key] = value
-    return result
+from build import Palette, ROOT, unique_object
 
 
 def rgba(value):
@@ -64,15 +54,20 @@ def main():
             colors.append(value.upper())
 
     inspect(style)
+    palette = Palette()
+    for key, value in palette.colors.items():
+        r, g, b, _ = rgba(value)
+        assert not (b > r and b >= g), f"Blue hue in the global palette: {key}"
     for color in colors:
-        red, green, blue, _ = rgba(color)
-        assert color[:7] in PALETTE or red == green == blue <= 0.55, (
-            f"Color outside prompt palette or neutral surfaces: {color}")
+        assert color[:7] in palette.colors.values(), f"Color outside global palette: {color}"
     for name, token in syntax.items():
-        assert token["color"] in PALETTE, f"Syntax color outside prompt palette: {name}"
-    css = (ROOT / "palette.css").read_text(encoding="utf-8")
-    for color in re.findall(r"#[0-9a-fA-F]{6,8}\b", css):
-        assert color.upper() in colors, f"Palette color missing from theme: {color}"
+        assert token["font_style"] == "normal", f"Not upright: {name}"
+    assert syntax["emphasis.strong"]["font_weight"] >= 600
+    for key in ("property", "property.json_key", "variable.member", "field"):
+        assert syntax[key]["color"] == style["editor.foreground"], f"Tinted property: {key}"
+    assert len({syntax[key]["color"] for key in (
+        "variable", "variable.parameter", "function", "type", "keyword",
+        "string", "number", "comment")}) == 8, "Core syntax roles collapsed"
 
     results = []
     failures = []
@@ -113,15 +108,22 @@ def main():
         bg = over(rgba(style[name + ".background"]), rgba(style["elevated_surface.background"]))
         check(name, style[name], bg)
 
-    states = ("modified", "created", "deleted", "conflict")
-    # Match the prompt's Git semantics, including shared deleted/conflict colors.
-    for key, color in (("modified", "#CCCCCC"), ("created", "#A7B89F"),
-                       ("deleted", "#DD9387"), ("conflict", "#DD9387")):
-        assert style[key] == color, f"Git color differs from prompt: {key}"
-    for state in ("panel.background", "element.hover", "element.selected"):
-        for key in (*states, "warning", "renamed"):
-            check(f"file {key} / {state}", style[key], rgba(style[state]))
-        check(f"file ignored / {state}", style["ignored"], rgba(style[state]), 2.8)
+    states = ("modified", "created", "deleted", "renamed", "conflict")
+    assert style["modified"] == palette.resolve("orange")
+    assert style["warning"] == syntax["constant"]["color"] != style["error"]
+    assert luminance(rgba(style["warning"])) > luminance(rgba(style["modified"]))
+    assert style["error"] == palette.resolve("terracotta")
+    # Contrast against the panel alone would allow silver modified vs. white clean.
+    # Guard against near-identical foregrounds (sRGB distance, not a WCAG metric).
+    for a, b in combinations(("text", *states), 2):
+        assert dist(rgba(style[a])[:3], rgba(style[b])[:3]) > 0.12, f"File colors too close: {a}, {b}"
+    panel = rgba(style["panel.background"])
+    for state in ("panel.background", "element.hover", "element.selected",
+                  "ghost_element.hover", "ghost_element.selected"):
+        bg = over(rgba(style[state]), panel)
+        for key in (*states, "warning", "error"):
+            check(f"file {key} / {state}", style[key], bg)
+        check(f"file ignored / {state}", style["ignored"], bg, 2.8)
     assert luminance(rgba(style["ignored"])) < luminance(rgba(style["text.muted"])) * 0.5
     for vcs, state in (("added", "created"), ("modified", "modified"), ("deleted", "deleted"),
                        ("renamed", "renamed"), ("conflict", "conflict"), ("ignored", "ignored")):
@@ -134,6 +136,12 @@ def main():
         check(f"visible overlay {key}", style[key], active, 1.15)
     for key in ("editor.diff_hunk.added.hollow_border", "editor.diff_hunk.deleted.hollow_border"):
         check(f"diff border {key}", style[key], active, 3.0)
+    for change in ("added", "deleted"):
+        line = backgrounds[f"editor.diff_hunk.{change}.background"]
+        word = style[f"version_control.word_{change}"]
+        check(f"changed word visible on {change} line", word, line, 1.35)
+        for name, token in syntax.items():
+            check(f"{name} / {change} word on line", token["color"], over(rgba(word), line), 3.0)
 
     for key, color in style.items():
         if key.startswith("terminal.ansi."):
